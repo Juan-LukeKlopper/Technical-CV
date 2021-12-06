@@ -28,4 +28,4 @@ jobs:
         cache: 'npm'
     - run: npm install
     - run: npm install three
-    - run: npm run dev --if-present
+    - run: npm run serve --if-present
