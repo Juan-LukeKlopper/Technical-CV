@@ -2,6 +2,7 @@ canvas{
   position: fixed;
   top: 0;
   left: 0;
+  height: 110%;
 }
   header{
     background: var(--dark-bg);
@@ -12,6 +13,7 @@ canvas{
   }
 
   section {
+    width: 60vw;
     grid-column: 2 / 8;
     padding: 1rem;
     background: var(--dark-bg);
