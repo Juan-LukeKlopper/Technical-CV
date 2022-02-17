@@ -8,8 +8,11 @@ canvas{
     background: var(--dark-bg);
     grid-column: 2 / span 5;
     font-size: 2.5rem;
-    padding: 2rem;
+    width:80vw;
+    padding: 1.5rem;
     margin-bottom: var(--spacing);
+    border-radius: 20%;
+    border: 1px solid whitesmoke;
   }
 
   section {
@@ -20,6 +23,8 @@ canvas{
     font-size: 1.25rem;
     line-height: 1.5;
     margin-bottom: var(--spacing);
+    border-radius: 5%;
+    border: 1px solid whitesmoke;
   }
 
   blockquote{
@@ -98,13 +103,14 @@ margin-right: auto;
   position: relative;
   width: 95%;
   font-weight: bold;
+  border: 1px solid #fff;
 }
 
-
-.hidden {
-  color: rgba(15, 15, 15, 0.95);
-  opacity: 0;
+.bar.flex {
+  margin-top: 1vh;
+  margin-bottom: 3vh;
 }
+
 
 .fa{
   width: 7%;
@@ -119,19 +125,4 @@ a:hover{
 
 .fa-linkedin {
   color: #9700f9;
-}
-
-@media only screen and (max-width: 700px) {
-  h1,h2,h3{
-    font-size: smaller;
-  }
-
-  p {
-    font-size: x-small;
-  }
-
-  .picture {
-    width: 130px;
-    height: 130px;
-  }
 }
