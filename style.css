@@ -132,3 +132,14 @@ a:hover{
   margin-top: 10px;
   border-radius: 20%;  
 }
+
+@media screen and (max-width: 500px){
+  .section{
+    font-size: 1rem;
+    width: 65vw;
+  }
+
+  .header{
+    font-size: 1.45rem;
+  }
+}
