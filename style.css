@@ -7,12 +7,11 @@ canvas{
   header{
     background: var(--dark-bg);
     grid-column: 2 / span 5;
-    font-size: 1.75rem;
     width:80vw;
     padding: 1.5rem;
     margin-bottom: var(--spacing);
     border-radius: 20%;
-    border: 1px solid whitesmoke;
+    border: 2px solid whitesmoke;
   }
 
   section {
@@ -20,7 +19,6 @@ canvas{
     grid-column: 2 / 8;
     padding: 1rem;
     background: var(--dark-bg);
-    font-size: 1.45rem;
     line-height: 1.5;
     margin-bottom: var(--spacing);
     border-radius: 5%;
@@ -48,12 +46,25 @@ main {
   grid-template-columns: repeat(12, 1fr);
 }
 
-h1,h2,h3 {
+p{
+  font-size: large;
+}
+
+h1,h2 {
+  padding: 0;
   font-family: elevon, sans-serif;
   font-weight: 600;
   font-style: normal;
   color: #9700f9;
-  font-size: large;
+  font-size:x-large;
+}
+
+h3{
+  font-family: elevon, sans-serif;
+  font-weight: 600;
+  font-style: normal;
+  color: #9700f9;
+  font-size:larger;
 }
 
 blockquote {
@@ -137,11 +148,7 @@ a:hover{
 
 @media screen and (max-width: 500px){
   .section{
-    font-size: 1rem;
-    width: 65vw;
-  }
-
-  .header{
-    font-size: 1.45rem;
+    width: 80vw;
+    border-radius: 0;
   }
 }
