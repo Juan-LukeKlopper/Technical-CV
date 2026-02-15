@@ -11,7 +11,20 @@ camera.position.set(0, 0, 18);
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
-renderer.setSize(window.innerWidth, window.innerHeight);
+
+const viewport = { width: 0, height: 0 };
+const syncViewportSize = () => {
+  const width = Math.round(window.innerWidth);
+  const height = Math.round(window.visualViewport?.height || window.innerHeight);
+  if (width === viewport.width && height === viewport.height) return;
+
+  viewport.width = width;
+  viewport.height = height;
+  camera.aspect = width / Math.max(height, 1);
+  camera.updateProjectionMatrix();
+  renderer.setSize(width, height, false);
+  updateScrollTarget();
+};
 
 const ambientLight = new THREE.AmbientLight(0xffffff, 1);
 const keyLight = new THREE.PointLight(0xffffff, 0.5, 500);
@@ -188,14 +201,10 @@ const updateScrollTarget = () => {
   scrollState.target = THREE.MathUtils.clamp(window.scrollY / maxScroll(), 0, 1);
 };
 window.addEventListener('scroll', updateScrollTarget, { passive: true });
+window.addEventListener('resize', syncViewportSize);
+window.visualViewport?.addEventListener('resize', syncViewportSize);
 updateScrollTarget();
-
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  updateScrollTarget();
-});
+syncViewportSize();
 
 const eggLiveRegion = document.querySelector('#easter-egg');
 const eggToast = document.querySelector('#egg-toast');
@@ -348,6 +357,7 @@ renderer.autoClear = false;
 function animate() {
   requestAnimationFrame(animate);
   const elapsed = clock.getElapsedTime();
+  syncViewportSize();
 
   scrollState.current += (scrollState.target - scrollState.current) * 0.05;
   const progress = scrollState.current;
