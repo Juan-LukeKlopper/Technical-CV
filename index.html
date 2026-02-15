@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Technical CV of Juan-luke Klopper, software engineer focused on fullstack systems, DevOps, and modern web tooling."
+      content="Technical CV of Juan-luke Klopper, software engineer focused on fullstack systems, DevOps, security-minded delivery, and modern web tooling."
     />
     <title>Juan-luke Klopper · Technical CV</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -19,8 +19,13 @@
         <p class="eyebrow">Software Engineer · Cape Town, South Africa</p>
         <h1 id="site-title">Juan-luke Klopper</h1>
         <p>
-          Fullstack Software Engineer who loves cryptography, automation, and exploring new technologies. Currently
-          building in the gaming industry as a Software Engineer at Games Global.
+          Fullstack Software Engineer who loves cryptography, automation, and exploring new technologies. I’m currently
+          building in the gaming industry at Games Global, where my day-to-day work blends product engineering,
+          reliability, and practical systems thinking.
+        </p>
+        <p>
+          This site is intentionally scroll-driven: each major 3D scene should move into focus and then pass by as you
+          progress, mirroring a long-form technical journey rather than a static page.
         </p>
         <div class="cta-row">
           <a class="button" href="./Juan-lukeKlopperResume.pdf" download="Juan-luke Klopper Resume">Download Résumé</a>
@@ -28,23 +33,52 @@
         </div>
       </header>
 
+      <blockquote class="panel quote">
+        “Programming isn't about what you know; it's about what you can figure out.”
+      </blockquote>
+
       <section class="panel" aria-labelledby="about-heading">
         <h2 id="about-heading">About</h2>
         <p>
-          I design and ship production software across Rust, TypeScript/JavaScript, Ruby, and cloud-native stacks.
-          My focus is resilient systems, automation-first workflows, and strong developer experience.
+          I design and ship production software across Rust, TypeScript/JavaScript, Ruby, and cloud-native stacks. I
+          care deeply about clean architecture, observability, and automation-first workflows that help teams move fast
+          without sacrificing confidence.
+        </p>
+        <p>
+          My strongest interest areas include secure-by-default systems, practical DevSecOps, and developer tooling
+          that removes repetitive friction from engineering teams.
         </p>
       </section>
 
       <section class="panel" aria-labelledby="experience-heading">
         <h2 id="experience-heading">Experience</h2>
         <ul>
-          <li><strong>Software Engineer · Games Global</strong> — building scalable software in the gaming industry.</li>
-          <li><strong>DevOps Engineer · NextNet</strong> — cloud platform development, deployment, and maintenance.</li>
-          <li>Earlier work includes blockchain infrastructure, Web3 tooling, and IoT automation delivery.</li>
-          <li>Currently expanding into <strong>DevSecOps</strong> practices and secure delivery pipelines.</li>
+          <li>
+            <strong>Software Engineer · Games Global</strong> — building and maintaining production software in the
+            gaming domain, with a focus on reliability, performance, and scalable delivery patterns.
+          </li>
+          <li>
+            <strong>DevOps Engineer · NextNet</strong> — contributed to cloud platform development, deployment, and
+            maintenance, improving operational resilience and release consistency.
+          </li>
+          <li>
+            <strong>Blockchain / Infrastructure Engineering</strong> — delivered ecosystem tooling, automation scripts,
+            and community-facing integrations in decentralized environments.
+          </li>
+          <li>
+            <strong>Applied Automation Work</strong> — earlier project work included IoT and telemetry implementations,
+            translating real-world operational needs into maintainable software and control flows.
+          </li>
+          <li>
+            <strong>Current growth track</strong> — actively leveling up in DevSecOps to combine secure practices with
+            practical engineering throughput.
+          </li>
         </ul>
       </section>
+
+      <blockquote class="panel quote">
+        “First, solve the problem. Then, write the code.”
+      </blockquote>
 
       <section class="panel" aria-labelledby="skills-heading">
         <h2 id="skills-heading">Core Technologies</h2>
@@ -73,19 +107,24 @@
         <ul>
           <li>
             <a href="https://github.com/Juan-LukeKlopper/OxideAgent" target="_blank" rel="noreferrer">OxideAgent</a>
-            — Rust-based AI agent for chatting with local language models from the terminal, with an extensible agent
-            architecture.
+            — Rust-based AI agent for chatting with local language models from the terminal, designed with an
+            extensible agent architecture so capabilities can evolve without rewriting the core.
           </li>
           <li>
             <a href="https://juan-lukeklopper.github.io/Exploring_the_tech_frontier/" target="_blank" rel="noreferrer">Exploring the Tech Frontier</a>
-            — technical blog covering tutorials, practical insights, and open-source progress.
+            — a technical blog for deep-dive writeups, practical tutorials, and transparent open-source progress.
           </li>
           <li>
             <a href="https://github.com/Juan-LukeKlopper/Technical-CV" target="_blank" rel="noreferrer">Technical-CV</a>
-            — interactive portfolio focused on performance, 3D storytelling, and accessibility.
+            — an interactive portfolio that experiments with 3D storytelling, performance constraints, and accessible
+            UX patterns.
           </li>
         </ul>
       </section>
+
+      <blockquote class="panel quote">
+        “Programming is 10% writing code and 90% understanding why it's not working.”
+      </blockquote>
 
       <section class="panel" aria-labelledby="contact-heading">
         <h2 id="contact-heading">Contact</h2>
@@ -100,7 +139,8 @@
 
       <footer class="panel footer" aria-label="Footer">
         <p>Thanks for visiting.</p>
-        <p class="hint">Press <kbd>?</kbd> for a tiny cosmic hint.</p>
+        <p class="hint">Press <kbd>?</kbd> on desktop, or tap the tiny constellation button on mobile.</p>
+        <button id="mobile-egg-trigger" class="egg-trigger" aria-label="Constellation button for hidden hint">✦</button>
       </footer>
     </main>
 

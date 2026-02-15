@@ -3,10 +3,11 @@ import * as THREE from 'three';
 
 const canvas = document.querySelector('#background');
 const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0x02040b, 30, 210);
 const clock = new THREE.Clock();
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2200);
-camera.position.set(0, 0, 20);
+camera.position.set(0, 0, 18);
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
@@ -38,7 +39,7 @@ const profilePhoto = new THREE.Mesh(
   new THREE.BoxGeometry(6, 6, 6),
   new THREE.MeshBasicMaterial({ map: textureLoader.load('/jl4.jpeg') })
 );
-profilePhoto.position.set(14, 7, -45);
+profilePhoto.position.set(0, 1.5, -35);
 scene.add(profilePhoto);
 
 const earth = new THREE.Mesh(
@@ -55,7 +56,7 @@ const saturn = new THREE.Mesh(
 );
 
 const earthSystem = new THREE.Group();
-earthSystem.position.set(31, 20, -100);
+earthSystem.position.set(0, -1, -105);
 earthSystem.add(earth);
 
 const moonPivot = new THREE.Group();
@@ -65,7 +66,7 @@ earthSystem.add(moonPivot);
 scene.add(earthSystem);
 
 const saturnSystem = new THREE.Group();
-saturnSystem.position.set(55, 38, -180);
+saturnSystem.position.set(0, 3, -175);
 saturn.rotation.x = -10;
 saturnSystem.add(saturn);
 
@@ -181,6 +182,7 @@ window.addEventListener('resize', () => {
 });
 
 const eggLiveRegion = document.querySelector('#easter-egg');
+const mobileEggTrigger = document.querySelector('#mobile-egg-trigger');
 const konami = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
 let konamiIndex = 0;
 window.addEventListener('keydown', (event) => {
@@ -195,13 +197,67 @@ window.addEventListener('keydown', (event) => {
   }
 });
 
+let mobileTapCount = 0;
+let mobileTapTimer;
+mobileEggTrigger?.addEventListener('pointerup', () => {
+  mobileTapCount += 1;
+  clearTimeout(mobileTapTimer);
+  mobileTapTimer = setTimeout(() => {
+    mobileTapCount = 0;
+  }, 4500);
+
+  if (mobileTapCount === 5) {
+    eggLiveRegion.textContent = 'Mobile hint unlocked: now tap the upper-left corner of space four times.';
+    mobileTapCount = 0;
+  }
+});
+
 let hiddenClicks = 0;
-canvas.addEventListener('click', (event) => {
-  if (event.clientX < 80 && event.clientY < 80) hiddenClicks += 1;
+const registerCornerTap = (x, y) => {
+  if (x < 85 && y < 85) hiddenClicks += 1;
   if (hiddenClicks === 4) {
     eggLiveRegion.textContent = 'Second easter egg found: "Adventure is out there"... also check every triangle for cryptic clues.';
   }
+};
+
+canvas.addEventListener('click', (event) => {
+  registerCornerTap(event.clientX, event.clientY);
 });
+canvas.addEventListener('touchstart', (event) => {
+  const touch = event.touches[0];
+  if (touch) registerCornerTap(touch.clientX, touch.clientY);
+}, { passive: true });
+
+const focusStages = [
+  { at: 0, cam: new THREE.Vector3(0, 1.5, 16), look: new THREE.Vector3(0, 1.5, -35) },
+  { at: 0.34, cam: new THREE.Vector3(0, 1.5, -70), look: new THREE.Vector3(0, -1, -105) },
+  { at: 0.72, cam: new THREE.Vector3(0, 3, -142), look: new THREE.Vector3(0, 3, -175) },
+  { at: 1, cam: new THREE.Vector3(0, 2, -230), look: new THREE.Vector3(0, 2, -265) }
+];
+const currentLook = new THREE.Vector3(0, 0, -35);
+
+function sampleStages(progress) {
+  let start = focusStages[0];
+  let end = focusStages[focusStages.length - 1];
+
+  for (let i = 0; i < focusStages.length - 1; i += 1) {
+    const a = focusStages[i];
+    const b = focusStages[i + 1];
+    if (progress >= a.at && progress <= b.at) {
+      start = a;
+      end = b;
+      break;
+    }
+  }
+
+  const t = THREE.MathUtils.clamp((progress - start.at) / Math.max(end.at - start.at, 0.0001), 0, 1);
+  const eased = t * t * (3 - 2 * t);
+
+  return {
+    cam: start.cam.clone().lerp(end.cam, eased),
+    look: start.look.clone().lerp(end.look, eased)
+  };
+}
 
 renderer.autoClear = false;
 function animate() {
@@ -224,17 +280,21 @@ function animate() {
   profilePhoto.rotation.x += 0.004;
   starField.rotation.y += 0.00008;
 
-  camera.position.y = -progress * 10;
-  camera.position.x = progress * 7;
-  camera.position.z = 20 - progress * 260;
+  const sampled = sampleStages(progress);
+  camera.position.lerp(sampled.cam, 0.08);
+  currentLook.lerp(sampled.look, 0.08);
+  camera.lookAt(currentLook);
 
-  const launchStart = 0.24;
-  const launchEnd = 0.5;
+  const launchStart = 0.29;
+  const launchEnd = 0.56;
   const launchPhase = THREE.MathUtils.clamp((progress - launchStart) / (launchEnd - launchStart), 0, 1);
+  rocket.visible = progress >= launchStart - 0.03 && progress <= 0.72;
+  smoke.visible = rocket.visible;
+
   const earthWorld = earthSystem.position;
-  rocket.position.x = earthWorld.x + 1.8 + launchPhase * 3;
+  rocket.position.x = earthWorld.x + 1.8 + launchPhase * 1.8;
   rocket.position.y = earthWorld.y - 4.5 + launchPhase * 21 + Math.sin(elapsed * 3.3) * 0.1;
-  rocket.position.z = earthWorld.z - 1.2 - launchPhase * 12;
+  rocket.position.z = earthWorld.z - 1.2 - launchPhase * 6;
   rocket.rotation.z = -0.22;
   rocket.rotation.x = 0.15;
 
