@@ -15,7 +15,7 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
 const viewport = { width: 0, height: 0 };
 const syncViewportSize = () => {
   const width = Math.round(window.innerWidth);
-  const height = Math.round(window.visualViewport?.height || window.innerHeight);
+  const height = Math.round(window.innerHeight);
   if (width === viewport.width && height === viewport.height) return;
 
   viewport.width = width;
@@ -202,7 +202,6 @@ const updateScrollTarget = () => {
 };
 window.addEventListener('scroll', updateScrollTarget, { passive: true });
 window.addEventListener('resize', syncViewportSize);
-window.visualViewport?.addEventListener('resize', syncViewportSize);
 updateScrollTarget();
 syncViewportSize();
 
@@ -357,7 +356,6 @@ renderer.autoClear = false;
 function animate() {
   requestAnimationFrame(animate);
   const elapsed = clock.getElapsedTime();
-  syncViewportSize();
 
   scrollState.current += (scrollState.target - scrollState.current) * 0.05;
   const progress = scrollState.current;
