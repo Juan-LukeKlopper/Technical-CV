@@ -23,9 +23,11 @@ There are two hidden easter eggs in the experience:
    - Trigger the classic Konami sequence on desktop:
      `↑ ↑ ↓ ↓ ← → ← → B A`
    - You can press `?` for a hint.
-   - When discovered, you will get the themed message and a short retro-style audio cue.
+   - When discovered, you will get a Half-Life-themed message and a 2s Adventure Time-inspired melody cue.
 
 2. **Gravity Falls-themed egg**
    - Tap/click the top-left corner region of the viewport **four times** (within a few seconds).
    - On mobile, you can first tap the tiny constellation button in the footer 5 times for a hint.
-   - When discovered, you will get the themed message and a short eerie laugh-like audio cue.
+   - When discovered, you will get the themed message and an eerie Bill Cipher-style synthesized laugh cue.
+
+> Note: this project intentionally uses original synthesized cues instead of direct copyrighted TV audio clips.

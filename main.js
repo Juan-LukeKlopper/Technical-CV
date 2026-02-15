@@ -235,20 +235,30 @@ const playTone = (ctx, type, freq, start, duration, gain = 0.04) => {
 const playAdventureTimeCue = () => {
   const ctx = getAudioContext();
   if (!ctx) return;
-  const t = ctx.currentTime + 0.02;
-  playTone(ctx, 'triangle', 523.25, t, 0.16, 0.04);
-  playTone(ctx, 'triangle', 659.25, t + 0.17, 0.16, 0.04);
-  playTone(ctx, 'triangle', 783.99, t + 0.34, 0.2, 0.05);
+  const t = ctx.currentTime + 0.03;
+  // 2s homage phrase inspired by "Come Along With Me"
+  const melody = [
+    [392.0, 0.22], [440.0, 0.22], [523.25, 0.26], [587.33, 0.24],
+    [659.25, 0.28], [587.33, 0.22], [523.25, 0.26], [440.0, 0.28]
+  ];
+  let offset = 0;
+  for (const [freq, dur] of melody) {
+    playTone(ctx, 'triangle', freq, t + offset, dur, 0.045);
+    offset += dur;
+  }
 };
 
 const playBillCipherCue = () => {
   const ctx = getAudioContext();
   if (!ctx) return;
   const t = ctx.currentTime + 0.02;
-  playTone(ctx, 'sawtooth', 420, t, 0.1, 0.03);
-  playTone(ctx, 'sawtooth', 510, t + 0.08, 0.1, 0.03);
-  playTone(ctx, 'sawtooth', 610, t + 0.16, 0.12, 0.03);
-  playTone(ctx, 'square', 260, t + 0.25, 0.22, 0.02);
+
+  // Eerie laugh-like synthetic cue (copyright-safe approximation)
+  for (let i = 0; i < 5; i += 1) {
+    const start = t + i * 0.12;
+    playTone(ctx, 'sawtooth', 780 - i * 55, start, 0.08, 0.02);
+    playTone(ctx, 'square', 420 - i * 25, start + 0.02, 0.1, 0.012);
+  }
 };
 const konami = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
 let konamiIndex = 0;
@@ -256,10 +266,10 @@ window.addEventListener('keydown', (event) => {
   const keyValue = event.key.length === 1 ? event.key.toLowerCase() : event.key;
   konamiIndex = keyValue === konami[konamiIndex] ? konamiIndex + 1 : 0;
   if (keyValue === '?') {
-    showEggMessage('Hint: try an old-school game cheat code and click near the upper-left star cluster four times.');
+    showEggMessage('Hint: there are only two eggs here: the old-school game cheat code, and four taps in the upper-left corner.');
   }
   if (konamiIndex === konami.length) {
-    showEggMessage('Easter egg found: The universe says "Wubba Lubba Dub Dub" and trust nobody with a six-fingered journal.');
+    showEggMessage('Easter egg found: The Lambda labs channel is open. The right code changes everything.');
     playAdventureTimeCue();
     konamiIndex = 0;
   }
@@ -293,7 +303,7 @@ const registerCornerTap = (x, y) => {
     }, 4500);
   }
   if (hiddenClicks === 4) {
-    showEggMessage('Second easter egg found: "Adventure is out there"... also check every triangle for cryptic clues.');
+    showEggMessage('Second easter egg found: Reality can be bent, but this archive has only two hidden signals.');
     playBillCipherCue();
     hiddenClicks = 0;
   }
