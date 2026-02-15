@@ -58,6 +58,17 @@ main {
   line-height: 1.6;
 }
 
+.quote p {
+  margin: 0 0 0.55rem;
+}
+
+.quote cite {
+  display: block;
+  font-style: normal;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
 .hero {
   min-height: 60vh;
   display: flex;
@@ -195,4 +206,29 @@ kbd {
     width: 100%;
     margin-inline: auto;
   }
+}
+
+
+.egg-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 1rem;
+  transform: translateX(-50%) translateY(16px);
+  background: rgba(10, 14, 30, 0.88);
+  border: 1px solid rgba(165, 183, 255, 0.35);
+  border-radius: 10px;
+  color: var(--text);
+  padding: 0.55rem 0.8rem;
+  font-size: 0.92rem;
+  line-height: 1.35;
+  width: min(calc(100% - 1.5rem), 640px);
+  z-index: 4;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.egg-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }

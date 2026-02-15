@@ -85,6 +85,15 @@ saturnsringOuter.rotation.x = 10.5;
 saturnSystem.add(saturnsringInner, saturnsringOuter);
 scene.add(saturnSystem);
 
+function latLonToVector3(latDeg, lonDeg, radius) {
+  const lat = THREE.MathUtils.degToRad(latDeg);
+  const lon = THREE.MathUtils.degToRad(lonDeg);
+  const x = -radius * Math.cos(lat) * Math.cos(lon);
+  const y = radius * Math.sin(lat);
+  const z = radius * Math.cos(lat) * Math.sin(lon);
+  return new THREE.Vector3(x, y, z);
+}
+
 function createRocket() {
   const rocket = new THREE.Group();
   const body = new THREE.Mesh(
@@ -150,9 +159,15 @@ const shaderMaterial = new THREE.ShaderMaterial({
 
     void main() {
       vec2 uv = vUv;
-      vec3 deep = vec3(0.006, 0.01, 0.03);
-      vec3 haze = vec3(0.02, 0.025, 0.055);
-      vec3 bg = mix(deep, haze, smoothstep(0.1, 0.95, uv.y));
+      vec3 deep = vec3(0.015, 0.02, 0.055);
+      vec3 haze = vec3(0.05, 0.03, 0.08);
+      vec3 upper = vec3(0.03, 0.05, 0.09);
+      vec3 bg = mix(deep, upper, smoothstep(0.0, 1.0, uv.y));
+
+      float nebulaA = smoothstep(0.18, 0.95, sin(uv.x * 6.4 + uv.y * 4.8) * 0.5 + 0.5);
+      float nebulaB = smoothstep(0.24, 0.92, sin(uv.x * 9.7 - uv.y * 3.3 + 1.2) * 0.5 + 0.5);
+      bg += vec3(0.035, 0.015, 0.055) * nebulaA * 0.35;
+      bg += vec3(0.01, 0.025, 0.06) * nebulaB * 0.25;
 
       vec2 starCell = floor(uv * vec2(520.0, 300.0));
       float seed = hash(starCell);
@@ -182,17 +197,28 @@ window.addEventListener('resize', () => {
 });
 
 const eggLiveRegion = document.querySelector('#easter-egg');
+const eggToast = document.querySelector('#egg-toast');
 const mobileEggTrigger = document.querySelector('#mobile-egg-trigger');
+
+let eggToastTimer;
+const showEggMessage = (message) => {
+  if (eggLiveRegion) eggLiveRegion.textContent = message;
+  if (!eggToast) return;
+  eggToast.textContent = message;
+  eggToast.classList.add('show');
+  clearTimeout(eggToastTimer);
+  eggToastTimer = setTimeout(() => eggToast.classList.remove('show'), 4200);
+};
 const konami = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
 let konamiIndex = 0;
 window.addEventListener('keydown', (event) => {
   const keyValue = event.key.length === 1 ? event.key.toLowerCase() : event.key;
   konamiIndex = keyValue === konami[konamiIndex] ? konamiIndex + 1 : 0;
   if (keyValue === '?') {
-    eggLiveRegion.textContent = 'Hint: try an old-school game cheat code and click near the upper-left star cluster four times.';
+    showEggMessage('Hint: try an old-school game cheat code and click near the upper-left star cluster four times.');
   }
   if (konamiIndex === konami.length) {
-    eggLiveRegion.textContent = 'Easter egg found: The universe says "Wubba Lubba Dub Dub" and trust nobody with a six-fingered journal.';
+    showEggMessage('Easter egg found: The universe says "Wubba Lubba Dub Dub" and trust nobody with a six-fingered journal.');
     konamiIndex = 0;
   }
 });
@@ -207,25 +233,31 @@ mobileEggTrigger?.addEventListener('pointerup', () => {
   }, 4500);
 
   if (mobileTapCount === 5) {
-    eggLiveRegion.textContent = 'Mobile hint unlocked: now tap the upper-left corner of space four times.';
+    showEggMessage('Mobile hint unlocked: now tap the upper-left corner of space four times.');
     mobileTapCount = 0;
   }
 });
 
 let hiddenClicks = 0;
+let hiddenClicksTimer;
 const registerCornerTap = (x, y) => {
-  if (x < 85 && y < 85) hiddenClicks += 1;
+  const maxX = Math.max(95, window.innerWidth * 0.15);
+  const maxY = Math.max(95, window.innerHeight * 0.15);
+  if (x < maxX && y < maxY) {
+    hiddenClicks += 1;
+    clearTimeout(hiddenClicksTimer);
+    hiddenClicksTimer = setTimeout(() => {
+      hiddenClicks = 0;
+    }, 4500);
+  }
   if (hiddenClicks === 4) {
-    eggLiveRegion.textContent = 'Second easter egg found: "Adventure is out there"... also check every triangle for cryptic clues.';
+    showEggMessage('Second easter egg found: "Adventure is out there"... also check every triangle for cryptic clues.');
+    hiddenClicks = 0;
   }
 };
 
-canvas.addEventListener('click', (event) => {
+window.addEventListener('pointerup', (event) => {
   registerCornerTap(event.clientX, event.clientY);
-});
-canvas.addEventListener('touchstart', (event) => {
-  const touch = event.touches[0];
-  if (touch) registerCornerTap(touch.clientX, touch.clientY);
 }, { passive: true });
 
 const focusStages = [
@@ -291,23 +323,33 @@ function animate() {
   rocket.visible = progress >= launchStart - 0.03 && progress <= 0.72;
   smoke.visible = rocket.visible;
 
-  const earthWorld = earthSystem.position;
-  rocket.position.x = earthWorld.x + 1.8 + launchPhase * 1.8;
-  rocket.position.y = earthWorld.y - 4.5 + launchPhase * 21 + Math.sin(elapsed * 3.3) * 0.1;
-  rocket.position.z = earthWorld.z - 1.2 - launchPhase * 6;
-  rocket.rotation.z = -0.22;
-  rocket.rotation.x = 0.15;
+  earth.updateMatrixWorld(true);
+  const earthCenter = new THREE.Vector3();
+  earth.getWorldPosition(earthCenter);
+  const capeTownLocal = latLonToVector3(-33.9249, 18.4241, 6.15);
+  const launchPoint = earth.localToWorld(capeTownLocal.clone());
+  const launchDir = launchPoint.clone().sub(earthCenter).normalize();
+  const tangent = new THREE.Vector3(0, 1, 0).cross(launchDir).normalize().multiplyScalar(0.18);
+
+  rocket.position.copy(launchPoint)
+    .addScaledVector(launchDir, launchPhase * 18)
+    .addScaledVector(tangent, launchPhase * 1.2);
+  rocket.lookAt(rocket.position.clone().add(launchDir));
+  rocket.rotateX(Math.PI * 0.5);
 
   const smokeAttr = smoke.geometry.attributes.position;
   for (let i = 0; i < smokeCount; i += 1) {
     const idx = i * 3;
-    const lift = (i / smokeCount) * (0.9 + launchPhase * 6.8);
-    const swirl = 0.22 + i * 0.006;
-    smokePositions[idx] = rocket.position.x + Math.cos(smokeSeeds[i] + elapsed * 1.2) * swirl;
-    smokePositions[idx + 1] = rocket.position.y - 0.9 - lift;
-    smokePositions[idx + 2] = rocket.position.z + Math.sin(smokeSeeds[i] + elapsed * 1.1) * swirl;
+    const spread = 0.18 + i * 0.004;
+    const falloff = (i / smokeCount) * (0.9 + launchPhase * 7.4);
+    const swirlX = Math.cos(smokeSeeds[i] + elapsed * 1.1) * spread;
+    const swirlZ = Math.sin(smokeSeeds[i] + elapsed * 1.15) * spread;
+
+    smokePositions[idx] = rocket.position.x - launchDir.x * (0.55 + falloff) + tangent.x * swirlX;
+    smokePositions[idx + 1] = rocket.position.y - launchDir.y * (0.55 + falloff) - 0.15 * falloff;
+    smokePositions[idx + 2] = rocket.position.z - launchDir.z * (0.55 + falloff) + tangent.z * swirlZ;
   }
-  smoke.material.opacity = launchPhase > 0 ? 0.5 : 0;
+  smoke.material.opacity = launchPhase > 0 ? 0.46 : 0;
   smokeAttr.needsUpdate = true;
 
   renderer.clear();
