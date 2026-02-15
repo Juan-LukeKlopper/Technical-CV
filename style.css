@@ -1,6 +1,6 @@
 :root {
   --bg: #02040b;
-  --panel: rgba(8, 10, 21, 0.72);
+  --panel: rgba(8, 10, 21, 0.74);
   --text: #edf2ff;
   --muted: #a8b4d8;
   --accent: #88a0ff;
@@ -35,14 +35,14 @@ main {
   z-index: 1;
   width: min(100% - 2rem, var(--max));
   margin: 0 auto;
-  padding: 10vh 0 18vh;
+  padding: 14vh 0 40vh;
   display: flex;
   flex-direction: column;
-  gap: 16vh;
+  gap: 140vh;
 }
 
 .panel {
-  width: min(100%, 760px);
+  width: min(100%, 780px);
   background: linear-gradient(145deg, rgba(16, 21, 44, 0.72), var(--panel));
   border: 1px solid var(--border);
   border-radius: 18px;
@@ -162,7 +162,7 @@ a:focus-visible {
   main {
     width: min(100% - 1rem, var(--max));
     padding-top: 2.2rem;
-    gap: 10vh;
+    gap: 90vh;
   }
 
   .panel,
