@@ -1,5 +1,5 @@
-export default {
-    build: {
-        chunkSizeWarningLimit: 1600,
-    }
+module.exports = {
+  build: {
+    chunkSizeWarningLimit: 1600
   }
+};
