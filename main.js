@@ -86,11 +86,12 @@ saturnSystem.add(saturnsringInner, saturnsringOuter);
 scene.add(saturnSystem);
 
 function latLonToVector3(latDeg, lonDeg, radius) {
+  const textureLongitudeOffset = -115;
   const lat = THREE.MathUtils.degToRad(latDeg);
-  const lon = THREE.MathUtils.degToRad(lonDeg);
-  const x = -radius * Math.cos(lat) * Math.cos(lon);
+  const lon = THREE.MathUtils.degToRad(lonDeg + textureLongitudeOffset);
+  const x = radius * Math.cos(lat) * Math.sin(lon);
   const y = radius * Math.sin(lat);
-  const z = radius * Math.cos(lat) * Math.sin(lon);
+  const z = radius * Math.cos(lat) * Math.cos(lon);
   return new THREE.Vector3(x, y, z);
 }
 
@@ -209,6 +210,46 @@ const showEggMessage = (message) => {
   clearTimeout(eggToastTimer);
   eggToastTimer = setTimeout(() => eggToast.classList.remove('show'), 4200);
 };
+
+let audioContext;
+const getAudioContext = () => {
+  if (!window.AudioContext && !window.webkitAudioContext) return null;
+  if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioContext.state === 'suspended') audioContext.resume();
+  return audioContext;
+};
+
+const playTone = (ctx, type, freq, start, duration, gain = 0.04) => {
+  const osc = ctx.createOscillator();
+  const vol = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, start);
+  vol.gain.setValueAtTime(0.0001, start);
+  vol.gain.exponentialRampToValueAtTime(gain, start + 0.01);
+  vol.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+  osc.connect(vol).connect(ctx.destination);
+  osc.start(start);
+  osc.stop(start + duration + 0.02);
+};
+
+const playAdventureTimeCue = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  const t = ctx.currentTime + 0.02;
+  playTone(ctx, 'triangle', 523.25, t, 0.16, 0.04);
+  playTone(ctx, 'triangle', 659.25, t + 0.17, 0.16, 0.04);
+  playTone(ctx, 'triangle', 783.99, t + 0.34, 0.2, 0.05);
+};
+
+const playBillCipherCue = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  const t = ctx.currentTime + 0.02;
+  playTone(ctx, 'sawtooth', 420, t, 0.1, 0.03);
+  playTone(ctx, 'sawtooth', 510, t + 0.08, 0.1, 0.03);
+  playTone(ctx, 'sawtooth', 610, t + 0.16, 0.12, 0.03);
+  playTone(ctx, 'square', 260, t + 0.25, 0.22, 0.02);
+};
 const konami = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
 let konamiIndex = 0;
 window.addEventListener('keydown', (event) => {
@@ -219,6 +260,7 @@ window.addEventListener('keydown', (event) => {
   }
   if (konamiIndex === konami.length) {
     showEggMessage('Easter egg found: The universe says "Wubba Lubba Dub Dub" and trust nobody with a six-fingered journal.');
+    playAdventureTimeCue();
     konamiIndex = 0;
   }
 });
@@ -252,6 +294,7 @@ const registerCornerTap = (x, y) => {
   }
   if (hiddenClicks === 4) {
     showEggMessage('Second easter egg found: "Adventure is out there"... also check every triangle for cryptic clues.');
+    playBillCipherCue();
     hiddenClicks = 0;
   }
 };
