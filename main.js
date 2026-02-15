@@ -1,134 +1,422 @@
 import './style.css';
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-
-const scene = new THREE.Scene();
-
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-
-const renderer = new THREE.WebGLRenderer({canvas: document.querySelector('#background')});
-renderer.setPixelRatio(window.devicePixelRatio);
-renderer.setSize(window.innerWidth, window.innerHeight);
 
 const canvas = document.querySelector('#background');
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0x02040b, 30, 210);
+const clock = new THREE.Clock();
 
-const controller = new OrbitControls(camera, canvas);
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2200);
+camera.position.set(0, 0, 18);
 
-// Light for scene
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
 
-const ambientlight = new THREE.AmbientLight(0xffffff);
-ambientlight.position.set(0, 0, 30);
-scene.add(ambientlight);
+const viewport = { width: 0, height: 0 };
+const syncViewportSize = () => {
+  const width = Math.round(window.innerWidth);
+  const height = Math.round(window.innerHeight);
+  if (width === viewport.width && height === viewport.height) return;
 
-//background picture
+  viewport.width = width;
+  viewport.height = height;
+  camera.aspect = width / Math.max(height, 1);
+  camera.updateProjectionMatrix();
+  renderer.setSize(width, height, false);
+  updateScrollTarget();
+};
 
-const spaceTexture = new THREE.TextureLoader().load('space.jpg');
-scene.background = spaceTexture;
+const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+const keyLight = new THREE.PointLight(0xffffff, 0.5, 500);
+keyLight.position.set(-10, 15, 30);
+scene.add(ambientLight, keyLight);
 
-//Star objects
-
-function addstar() {
-  const geometry = new THREE.SphereGeometry(1, 24, 24);
-  const material = new THREE.MeshBasicMaterial({ color: 0xffffff});
-  const star = new THREE.Mesh(geometry, material);
-
-  const [x, y, z] = Array(3).fill().map(() => THREE.MathUtils.randFloatSpread(1000));
-  star.position.set(x, y, z);
-  scene.add(star);
+const starGeometry = new THREE.BufferGeometry();
+const stars = 2000;
+const positions = new Float32Array(stars * 3);
+for (let i = 0; i < stars * 3; i += 3) {
+  positions[i] = THREE.MathUtils.randFloatSpread(1000);
+  positions[i + 1] = THREE.MathUtils.randFloatSpread(1000);
+  positions[i + 2] = THREE.MathUtils.randFloatSpread(1000);
 }
-Array(2000).fill().forEach(addstar);
+starGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+const starField = new THREE.Points(
+  starGeometry,
+  new THREE.PointsMaterial({ color: 0xffffff, size: 0.95, sizeAttenuation: true, transparent: true, opacity: 0.9 })
+);
+scene.add(starField);
 
-//Profile Picture cube
+const textureLoader = new THREE.TextureLoader();
 
-const pictureTexture = new THREE.TextureLoader().load('jl4.jpeg');
-const profilephoto = new THREE.Mesh(
-  new THREE.BoxGeometry(6,6,6),
-  new THREE.MeshBasicMaterial({ map: pictureTexture})
-)
+const profilePhoto = new THREE.Mesh(
+  new THREE.BoxGeometry(6, 6, 6),
+  new THREE.MeshBasicMaterial({ map: textureLoader.load('/jl4.jpeg') })
+);
+profilePhoto.position.set(0, 1.5, -35);
+scene.add(profilePhoto);
 
-profilephoto.position.set(20, 8, 50);
-profilephoto.rotateX(10);
-scene.add(profilephoto);
-
-//Planet objects
-
-const earthTexture = new THREE.TextureLoader().load('earth.jpg');
 const earth = new THREE.Mesh(
   new THREE.SphereGeometry(6, 32, 32),
-  new THREE.MeshStandardMaterial({ map: earthTexture})
-)
-
-const moonTexture = new THREE.TextureLoader().load('moon.jpg');
+  new THREE.MeshStandardMaterial({ map: textureLoader.load('/earth.jpg') })
+);
 const moon = new THREE.Mesh(
   new THREE.SphereGeometry(1, 32, 32),
-  new THREE.MeshStandardMaterial({ map: moonTexture})
-)
-
-const saturnTexture = new THREE.TextureLoader().load('saturn.jpeg');
+  new THREE.MeshStandardMaterial({ map: textureLoader.load('/moon.jpg') })
+);
 const saturn = new THREE.Mesh(
   new THREE.SphereGeometry(6, 32, 32),
-  new THREE.MeshStandardMaterial({ map: saturnTexture})
-)
+  new THREE.MeshStandardMaterial({ map: textureLoader.load('/saturn.jpeg') })
+);
 
-earth.position.set(31, 20, 100);
-moon.position.set(35, 24, 110);
-saturn.position.set(55, 38, 180);
-saturn.rotateX(-10);
-scene.add(earth, moon, saturn);
+const earthSystem = new THREE.Group();
+earthSystem.position.set(0, -1, -105);
+earthSystem.add(earth);
 
-// Saturns ring objects
+const moonPivot = new THREE.Group();
+moon.position.set(4, 0, -10);
+moonPivot.add(moon);
+earthSystem.add(moonPivot);
+scene.add(earthSystem);
 
-const geometry = new THREE.TorusGeometry(9, 1, 2, 100);
-const material = new THREE.MeshStandardMaterial({ color: 0x8a8a67 , wireframe: true});
-const saturnsringInner = new THREE.Mesh(geometry, material);
-saturnsringInner.position.set(55, 38, 180);
-saturnsringInner.rotateX(10.5);
-const geometry2 = new THREE.TorusGeometry(11, 1, 2, 100);
-const material2 = new THREE.MeshStandardMaterial({ color: 0xffac32 , wireframe: true});
-const saturnsringOuter = new THREE.Mesh(geometry2, material2);
-saturnsringOuter.position.set(55, 38, 180)
-saturnsringOuter.rotateX(10.5);
-scene.add(saturnsringInner, saturnsringOuter);
+const saturnSystem = new THREE.Group();
+saturnSystem.position.set(0, 3, -175);
+saturn.rotation.x = -10;
+saturnSystem.add(saturn);
 
+const saturnsringInner = new THREE.Mesh(
+  new THREE.TorusGeometry(9, 1, 2, 100),
+  new THREE.MeshStandardMaterial({ color: 0x8a8a67, wireframe: true })
+);
+saturnsringInner.rotation.x = 10.5;
 
-//move animation on scroll
+const saturnsringOuter = new THREE.Mesh(
+  new THREE.TorusGeometry(11, 1, 2, 100),
+  new THREE.MeshStandardMaterial({ color: 0xffac32, wireframe: true })
+);
+saturnsringOuter.rotation.x = 10.5;
 
-function MoveCamera() {
+saturnSystem.add(saturnsringInner, saturnsringOuter);
+scene.add(saturnSystem);
 
-  const t = document.body.getBoundingClientRect().top;
-  moon.rotation.z -= 0.01;
-  earth.rotation.z += 0.01;
-
-  profilephoto.rotation.y += 0.02;
-  profilephoto.rotation.x += 0.02;
-
-  
-
-  camera.position.y = t * -0.01;
-  camera.position.x = t * -0.01;
-  camera.position.z = t * -0.05;
-
-  
-  renderer.render(scene, camera);
+function latLonToVector3(latDeg, lonDeg, radius) {
+  const textureLongitudeOffset = -115;
+  const lat = THREE.MathUtils.degToRad(latDeg);
+  const lon = THREE.MathUtils.degToRad(lonDeg + textureLongitudeOffset);
+  const x = radius * Math.cos(lat) * Math.sin(lon);
+  const y = radius * Math.sin(lat);
+  const z = radius * Math.cos(lat) * Math.cos(lon);
+  return new THREE.Vector3(x, y, z);
 }
-document.body.onscroll = MoveCamera;
 
-// animation function 
+function createRocket() {
+  const rocket = new THREE.Group();
+  const body = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.13, 0.18, 1.2, 6),
+    new THREE.MeshStandardMaterial({ color: 0xdce6ff, flatShading: true })
+  );
+  const nose = new THREE.Mesh(
+    new THREE.ConeGeometry(0.14, 0.42, 6),
+    new THREE.MeshStandardMaterial({ color: 0xff6588, flatShading: true })
+  );
+  const finGeo = new THREE.BoxGeometry(0.05, 0.25, 0.2);
+  const finMat = new THREE.MeshStandardMaterial({ color: 0x4c69ff, flatShading: true });
+  const finA = new THREE.Mesh(finGeo, finMat);
+  const finB = finA.clone();
 
-function animate(){
+  finA.position.set(0.13, -0.45, 0);
+  finB.position.set(-0.13, -0.45, 0);
+  nose.position.y = 0.8;
+
+  rocket.add(body, nose, finA, finB);
+  return rocket;
+}
+
+const rocket = createRocket();
+scene.add(rocket);
+
+const smokeCount = 60;
+const smokeGeometry = new THREE.BufferGeometry();
+const smokePositions = new Float32Array(smokeCount * 3);
+const smokeSeeds = new Float32Array(smokeCount);
+for (let i = 0; i < smokeCount; i += 1) {
+  smokeSeeds[i] = Math.random() * Math.PI * 2;
+}
+smokeGeometry.setAttribute('position', new THREE.BufferAttribute(smokePositions, 3));
+const smoke = new THREE.Points(
+  smokeGeometry,
+  new THREE.PointsMaterial({ color: 0xbfc5d1, size: 0.25, transparent: true, opacity: 0.5 })
+);
+scene.add(smoke);
+
+const shaderScene = new THREE.Scene();
+const shaderCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+const shaderUniforms = { uTime: { value: 0 } };
+
+const shaderMaterial = new THREE.ShaderMaterial({
+  uniforms: shaderUniforms,
+  depthWrite: false,
+  depthTest: false,
+  vertexShader: `
+    varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      gl_Position = vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: `
+    varying vec2 vUv;
+    uniform float uTime;
+
+    float hash(vec2 p) {
+      return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+    }
+
+    void main() {
+      vec2 uv = vUv;
+      vec3 deep = vec3(0.015, 0.02, 0.055);
+      vec3 haze = vec3(0.05, 0.03, 0.08);
+      vec3 upper = vec3(0.03, 0.05, 0.09);
+      vec3 bg = mix(deep, upper, smoothstep(0.0, 1.0, uv.y));
+
+      float nebulaA = smoothstep(0.18, 0.95, sin(uv.x * 6.4 + uv.y * 4.8) * 0.5 + 0.5);
+      float nebulaB = smoothstep(0.24, 0.92, sin(uv.x * 9.7 - uv.y * 3.3 + 1.2) * 0.5 + 0.5);
+      bg += vec3(0.035, 0.015, 0.055) * nebulaA * 0.35;
+      bg += vec3(0.01, 0.025, 0.06) * nebulaB * 0.25;
+
+      vec2 starCell = floor(uv * vec2(520.0, 300.0));
+      float seed = hash(starCell);
+      float star = step(0.9974, seed);
+      float twinkle = 0.985 + 0.015 * sin(uTime * 0.15 + seed * 80.0);
+      bg += star * twinkle * vec3(0.9, 0.92, 1.0);
+
+      gl_FragColor = vec4(bg, 1.0);
+    }
+  `
+});
+shaderScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), shaderMaterial));
+
+const scrollState = { current: 0, target: 0 };
+const maxScroll = () => Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
+const updateScrollTarget = () => {
+  scrollState.target = THREE.MathUtils.clamp(window.scrollY / maxScroll(), 0, 1);
+};
+window.addEventListener('scroll', updateScrollTarget, { passive: true });
+window.addEventListener('resize', syncViewportSize);
+updateScrollTarget();
+syncViewportSize();
+
+const eggLiveRegion = document.querySelector('#easter-egg');
+const eggToast = document.querySelector('#egg-toast');
+const mobileEggTrigger = document.querySelector('#mobile-egg-trigger');
+
+let eggToastTimer;
+const showEggMessage = (message) => {
+  if (eggLiveRegion) eggLiveRegion.textContent = message;
+  if (!eggToast) return;
+  eggToast.textContent = message;
+  eggToast.classList.add('show');
+  clearTimeout(eggToastTimer);
+  eggToastTimer = setTimeout(() => eggToast.classList.remove('show'), 4200);
+};
+
+let audioContext;
+const getAudioContext = () => {
+  if (!window.AudioContext && !window.webkitAudioContext) return null;
+  if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioContext.state === 'suspended') audioContext.resume();
+  return audioContext;
+};
+
+const playTone = (ctx, type, freq, start, duration, gain = 0.04) => {
+  const osc = ctx.createOscillator();
+  const vol = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, start);
+  vol.gain.setValueAtTime(0.0001, start);
+  vol.gain.exponentialRampToValueAtTime(gain, start + 0.01);
+  vol.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+  osc.connect(vol).connect(ctx.destination);
+  osc.start(start);
+  osc.stop(start + duration + 0.02);
+};
+
+const playAdventureTimeCue = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  const t = ctx.currentTime + 0.03;
+  // 2s homage phrase inspired by "Come Along With Me"
+  const melody = [
+    [392.0, 0.22], [440.0, 0.22], [523.25, 0.26], [587.33, 0.24],
+    [659.25, 0.28], [587.33, 0.22], [523.25, 0.26], [440.0, 0.28]
+  ];
+  let offset = 0;
+  for (const [freq, dur] of melody) {
+    playTone(ctx, 'triangle', freq, t + offset, dur, 0.045);
+    offset += dur;
+  }
+};
+
+const playBillCipherCue = () => {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  const t = ctx.currentTime + 0.02;
+
+  // Eerie laugh-like synthetic cue (copyright-safe approximation)
+  for (let i = 0; i < 5; i += 1) {
+    const start = t + i * 0.12;
+    playTone(ctx, 'sawtooth', 780 - i * 55, start, 0.08, 0.02);
+    playTone(ctx, 'square', 420 - i * 25, start + 0.02, 0.1, 0.012);
+  }
+};
+const konami = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+let konamiIndex = 0;
+window.addEventListener('keydown', (event) => {
+  const keyValue = event.key.length === 1 ? event.key.toLowerCase() : event.key;
+  konamiIndex = keyValue === konami[konamiIndex] ? konamiIndex + 1 : 0;
+  if (keyValue === '?') {
+    showEggMessage('Hint: there are only two eggs here: the old-school game cheat code, and four taps in the upper-left corner.');
+  }
+  if (konamiIndex === konami.length) {
+    showEggMessage('Easter egg found: The Lambda labs channel is open. The right code changes everything.');
+    playAdventureTimeCue();
+    konamiIndex = 0;
+  }
+});
+
+let mobileTapCount = 0;
+let mobileTapTimer;
+mobileEggTrigger?.addEventListener('pointerup', () => {
+  mobileTapCount += 1;
+  clearTimeout(mobileTapTimer);
+  mobileTapTimer = setTimeout(() => {
+    mobileTapCount = 0;
+  }, 4500);
+
+  if (mobileTapCount === 5) {
+    showEggMessage('Mobile hint unlocked: now tap the upper-left corner of space four times.');
+    mobileTapCount = 0;
+  }
+});
+
+let hiddenClicks = 0;
+let hiddenClicksTimer;
+const registerCornerTap = (x, y) => {
+  const maxX = Math.max(95, window.innerWidth * 0.15);
+  const maxY = Math.max(95, window.innerHeight * 0.15);
+  if (x < maxX && y < maxY) {
+    hiddenClicks += 1;
+    clearTimeout(hiddenClicksTimer);
+    hiddenClicksTimer = setTimeout(() => {
+      hiddenClicks = 0;
+    }, 4500);
+  }
+  if (hiddenClicks === 4) {
+    showEggMessage('Second easter egg found: Reality can be bent, but this archive has only two hidden signals.');
+    playBillCipherCue();
+    hiddenClicks = 0;
+  }
+};
+
+window.addEventListener('pointerup', (event) => {
+  registerCornerTap(event.clientX, event.clientY);
+}, { passive: true });
+
+const focusStages = [
+  { at: 0, cam: new THREE.Vector3(0, 1.5, 16), look: new THREE.Vector3(0, 1.5, -35) },
+  { at: 0.34, cam: new THREE.Vector3(0, 1.5, -70), look: new THREE.Vector3(0, -1, -105) },
+  { at: 0.72, cam: new THREE.Vector3(0, 3, -142), look: new THREE.Vector3(0, 3, -175) },
+  { at: 1, cam: new THREE.Vector3(0, 2, -230), look: new THREE.Vector3(0, 2, -265) }
+];
+const currentLook = new THREE.Vector3(0, 0, -35);
+
+function sampleStages(progress) {
+  let start = focusStages[0];
+  let end = focusStages[focusStages.length - 1];
+
+  for (let i = 0; i < focusStages.length - 1; i += 1) {
+    const a = focusStages[i];
+    const b = focusStages[i + 1];
+    if (progress >= a.at && progress <= b.at) {
+      start = a;
+      end = b;
+      break;
+    }
+  }
+
+  const t = THREE.MathUtils.clamp((progress - start.at) / Math.max(end.at - start.at, 0.0001), 0, 1);
+  const eased = t * t * (3 - 2 * t);
+
+  return {
+    cam: start.cam.clone().lerp(end.cam, eased),
+    look: start.look.clone().lerp(end.look, eased)
+  };
+}
+
+renderer.autoClear = false;
+function animate() {
   requestAnimationFrame(animate);
+  const elapsed = clock.getElapsedTime();
 
-  saturnsringInner.rotation.x += 0.01;
-  saturnsringOuter.rotation.x += 0.01;
-  saturn.rotation.x += 0.01;
-  earth.rotation.y += 0.01;
+  scrollState.current += (scrollState.target - scrollState.current) * 0.05;
+  const progress = scrollState.current;
+
+  shaderUniforms.uTime.value = elapsed;
+
+  earth.rotation.y += 0.003;
+  moonPivot.rotation.y += 0.012;
   moon.rotation.y += 0.01;
+  saturnSystem.rotation.y += 0.0025;
+  saturn.rotation.y += 0.0025;
+  saturnsringInner.rotation.z += 0.003;
+  saturnsringOuter.rotation.z += 0.003;
+  profilePhoto.rotation.y += 0.006;
+  profilePhoto.rotation.x += 0.004;
+  starField.rotation.y += 0.00008;
 
-  controller.update();
+  const sampled = sampleStages(progress);
+  camera.position.lerp(sampled.cam, 0.08);
+  currentLook.lerp(sampled.look, 0.08);
+  camera.lookAt(currentLook);
 
-  renderer.setPixelRatio(window.devicePixelRatio);
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  const launchStart = 0.29;
+  const launchEnd = 0.56;
+  const launchPhase = THREE.MathUtils.clamp((progress - launchStart) / (launchEnd - launchStart), 0, 1);
+  rocket.visible = progress >= launchStart - 0.03 && progress <= 0.72;
+  smoke.visible = rocket.visible;
+
+  earth.updateMatrixWorld(true);
+  const earthCenter = new THREE.Vector3();
+  earth.getWorldPosition(earthCenter);
+  const capeTownLocal = latLonToVector3(-33.9249, 18.4241, 6.15);
+  const launchPoint = earth.localToWorld(capeTownLocal.clone());
+  const launchDir = launchPoint.clone().sub(earthCenter).normalize();
+  const tangent = new THREE.Vector3(0, 1, 0).cross(launchDir).normalize().multiplyScalar(0.18);
+
+  rocket.position.copy(launchPoint)
+    .addScaledVector(launchDir, launchPhase * 18)
+    .addScaledVector(tangent, launchPhase * 1.2);
+  rocket.lookAt(rocket.position.clone().add(launchDir));
+  rocket.rotateX(Math.PI * 0.5);
+
+  const smokeAttr = smoke.geometry.attributes.position;
+  for (let i = 0; i < smokeCount; i += 1) {
+    const idx = i * 3;
+    const spread = 0.18 + i * 0.004;
+    const falloff = (i / smokeCount) * (0.9 + launchPhase * 7.4);
+    const swirlX = Math.cos(smokeSeeds[i] + elapsed * 1.1) * spread;
+    const swirlZ = Math.sin(smokeSeeds[i] + elapsed * 1.15) * spread;
+
+    smokePositions[idx] = rocket.position.x - launchDir.x * (0.55 + falloff) + tangent.x * swirlX;
+    smokePositions[idx + 1] = rocket.position.y - launchDir.y * (0.55 + falloff) - 0.15 * falloff;
+    smokePositions[idx + 2] = rocket.position.z - launchDir.z * (0.55 + falloff) + tangent.z * swirlZ;
+  }
+  smoke.material.opacity = launchPhase > 0 ? 0.46 : 0;
+  smokeAttr.needsUpdate = true;
+
+  renderer.clear();
+  renderer.render(shaderScene, shaderCamera);
+  renderer.clearDepth();
   renderer.render(scene, camera);
 }
 
-animate(); 
+animate();
